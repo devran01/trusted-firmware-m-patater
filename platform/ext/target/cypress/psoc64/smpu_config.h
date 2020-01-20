@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, Cypress Semiconductor Corporation. All rights reserved.
+ * Copyright (c) 2019-2020, Cypress Semiconductor Corporation. All rights reserved.
  * Copyright (c) 2019 Arm Limited. All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -69,10 +69,9 @@
 #error "Flash layout has changed - FLASH_S_PARTITION_SIZE isn't 5/8 of SMPU0_REGIONSIZE"
 #endif
 
-/* SMPU1 - start of secondary images in Flash */
-#define SMPU1_BASE         S_ROM_ALIAS(NON_SECURE_IMAGE_OFFSET + \
-                                       NON_SECURE_IMAGE_MAX_SIZE)
-#define SMPU1_REGIONSIZE   PROT_SIZE_64KB_BIT_SHIFT
+/* SMPU1 - Internal Trusted Storage in Flash */
+#define SMPU1_BASE         S_ROM_ALIAS(FLASH_ITS_AREA_OFFSET)
+#define SMPU1_REGIONSIZE   PROT_SIZE_16KB_BIT_SHIFT
 #define SMPU1_SLAVE_CONFIG {\
     .address = (void *)SMPU1_BASE, \
     .regionSize = SMPU1_REGIONSIZE, \
@@ -90,12 +89,14 @@
 #error "Flash layout has changed - SMPU1 needs updating"
 #endif
 
-/* SMPU2 - remainder of secondary images, plus secure storage, NV counters,
- * and unused space in Flash
- */
-/* SMPU2 should start immediately after SMPU1 */
-#define SMPU2_BASE         (SMPU1_BASE + REGIONSIZE_TO_BYTES(SMPU1_REGIONSIZE))
-#define SMPU2_REGIONSIZE   PROT_SIZE_512KB_BIT_SHIFT
+/* Should exactly cover the ITS region */
+#if FLASH_ITS_AREA_SIZE != REGIONSIZE_TO_BYTES(SMPU1_REGIONSIZE)
+#error "Flash layout has changed - SMPU1_REGIONSIZE isn't FLASH_ITS_AREA_SIZE"
+#endif
+
+/* SMPU2 - NV counters in Flash */
+#define SMPU2_BASE         S_ROM_ALIAS(FLASH_NV_COUNTERS_AREA_OFFSET)
+#define SMPU2_REGIONSIZE   PROT_SIZE_512B_BIT_SHIFT
 #define SMPU2_SLAVE_CONFIG {\
     .address = (void *)SMPU2_BASE, \
     .regionSize = SMPU2_REGIONSIZE, \
@@ -111,6 +112,11 @@
 /* SMPU requires base address aligned to size */
 #if SMPU2_BASE % REGIONSIZE_TO_BYTES(SMPU2_REGIONSIZE)
 #error "Flash layout has changed - SMPU2 needs updating"
+#endif
+
+/* Should exactly cover the NV Counters region */
+#if FLASH_NV_COUNTERS_AREA_SIZE != REGIONSIZE_TO_BYTES(SMPU2_REGIONSIZE)
+#error "Flash layout has changed - SMPU2_REGIONSIZE isn't FLASH_NV_COUNTERS_AREA_SIZE"
 #endif
 
 /* SMPU6 - 64KB of unprivileged secure data in SRAM */
