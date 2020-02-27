@@ -52,6 +52,7 @@ struct multi_call_service_info {
     uint32_t version;
 };
 
+#ifdef TFM_MULTI_CORE_TEST
 /*
  * If not enough secure services are defined for multiple outstanding PSA
  * client call test, the definitions below will trigger compiling error.
@@ -75,18 +76,22 @@ static struct test_t multi_core_tests[] = {
      "MULTI_CLIENT_CALL_HEAVY_TEST",
      "Multiple outstanding NS PSA client calls heavyweight test", {0}},
 };
+#endif
 
 void register_testsuite_multi_core_ns_interface(
                                               struct test_suite_t *p_test_suite)
 {
+#ifdef TFM_MULTI_CORE_TEST
     uint32_t list_size;
 
     list_size = (sizeof(multi_core_tests) / sizeof(multi_core_tests[0]));
 
     set_testsuite("TF-M test cases for multi-core topology",
                   multi_core_tests, list_size, p_test_suite);
+#endif
 }
 
+#ifdef TFM_MULTI_CORE_TEST
 static void wait_child_thread_completion(struct test_params *params_array,
                                          uint8_t child_idx)
 {
@@ -347,3 +352,4 @@ static void multi_client_call_heavy_test(struct test_result_t *ret)
                            MULTI_CALL_HEAVY_TEST_STACK_SIZE,
                            MAX_NR_HEAVY_TEST_ROUND);
 }
+#endif
